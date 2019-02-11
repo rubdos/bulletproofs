@@ -37,6 +37,20 @@ impl PedersenGens {
     pub fn commit(&self, value: Scalar, blinding: Scalar) -> RistrettoPoint {
         RistrettoPoint::multiscalar_mul(&[value, blinding], &[self.B, self.B_blinding])
     }
+
+    /// Creates a vector Pedersen commitment using the scalar values and a blinding factor.
+    ///
+    /// The generated vector Pedersen commitment equals \\(\sum^n_{i=1} v_iG_i + \widetilde{v} \widetilde{B}\\)
+    pub fn commit_multi<It>(&self, values: It, blinding: Scalar) -> RistrettoPoint
+        where It: Iterator<Item=Scalar>,
+              It: ExactSizeIterator
+    {
+        let chain = GeneratorsChain::new(b"commit_multi")
+            .take(values.len());
+        RistrettoPoint::multiscalar_mul(
+            values.chain(std::iter::once(blinding)),
+            chain.chain(std::iter::once(self.B_blinding)))
+    }
 }
 
 impl Default for PedersenGens {
